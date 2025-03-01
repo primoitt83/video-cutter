@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  video-editor:
+    image: node:20
+    container_name: video-editor
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    ports:
+      - "3000:3000"
+    # command: bash -c "npm install && node server.js"
+    command: sleep 1000000
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - ffmpeg
+    networks:
+      docker:
+    logging:
+      options:
+        max-size: 100M
+
+  ffmpeg:
+    #image: jrottenberg/ffmpeg:5.1-alpine
+    image: ffmpeg-rockchip:v2
+    container_name: ffmpeg
+    command: sleep 1000000
+    networks:
+      docker:
+    logging:
+      options:
+        max-size: 100M
+
+volumes:
+  uploads:
+  outputs:
+
+networks:
+  docker:

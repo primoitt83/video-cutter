@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de Vídeo Online</title>
+    <style>
+        #progressBarContainer {
+            width: 33%;
+            background-color: #f3f3f3;
+            margin-top: 10px;
+        }
+        #progressBar {
+            width: 0%;
+            height: 20px;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Editor de Vídeo Online</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="videoInput" name="video" accept="video/*" required />
+        <button type="submit">Enviar Vídeo</button>
+        <div id="progressBarContainer">
+            <div id="progressBar"></div>
+        </div>
+    </form>
+
+    <video id="videoPlayer" controls width="640" style="display: none;">
+        <source id="videoSource" src="" type="video/mp4" />
+    </video>
+
+    <div id="cutControls" style="display: none;">
+        <button id="selectStartButton">Selecione Início do Corte</button>
+        <span id="startTimeDisplay"></span>
+        <button id="selectEndButton">Selecione Fim do Corte</button>
+        <span id="endTimeDisplay"></span>
+
+        <div>
+            <label><input type="radio" name="cutOption" value="copy" checked> Corte Rápido (Sem Encoding)</label>
+            <label><input type="radio" name="cutOption" value="hardware"> Usar Hardware Encoding (RKMpp)</label>
+        </div>
+
+        <button onclick="cutVideo()">Cortar Vídeo</button>
+    </div>
+
+    <a id="downloadLink" style="display: none;" download>Baixar Vídeo Cortado</a>
+
+    <script>
+        let uploadedFilename = '';
+        let startTime = 0;
+        let endTime = 0;
+
+        document.getElementById('uploadForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('videoInput');
+            formData.append('video', fileInput.files[0]);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function (event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressBar').style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    uploadedFilename = data.filename;
+
+                    const videoPlayer = document.getElementById('videoPlayer');
+                    const videoSource = document.getElementById('videoSource');
+                    videoSource.src = `/uploads/${uploadedFilename}`;
+
+                    videoPlayer.style.display = 'block';
+                    videoPlayer.load();
+                    document.getElementById('cutControls').style.display = 'block';
+                }
+            };
+
+            xhr.send(formData);
+        });
+
+        document.getElementById('selectStartButton').addEventListener('click', function () {
+            const videoPlayer = document.getElementById('videoPlayer');
+            startTime = videoPlayer.currentTime;
+            document.getElementById('startTimeDisplay').textContent = `Início: ${startTime.toFixed(2)}s`;
+        });
+
+        document.getElementById('selectEndButton').addEventListener('click', function () {
+            const videoPlayer = document.getElementById('videoPlayer');
+            endTime = videoPlayer.currentTime;
+            document.getElementById('endTimeDisplay').textContent = `Fim: ${endTime.toFixed(2)}s`;
+        });
+
+        async function cutVideo() {
+            const cutOption = document.querySelector('input[name="cutOption"]:checked').value;
+
+            const response = await fetch('/cut-video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startTime: startTime,
+                    endTime: endTime,
+                    filename: uploadedFilename,
+                    copy: cutOption === 'copy',
+                    hardware: cutOption === 'hardware'
+                })
+            });
+
+            const data = await response.json();
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = data.url;
+            downloadLink.style.display = 'block';
+            downloadLink.innerText = 'Baixar Vídeo Cortado';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  video-cutter:
+    #image: node:20
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: video-cutter
+    working_dir: /app
+    privileged: true
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - ./app:/app
+    ports:
+      - 3000:3000
+    command: sleep 1000000
+    environment:
+      - NODE_ENV=development
+    devices:
+     - /dev/rga:/dev/rga
+     - /dev/dri:/dev/dri
+     - /dev/dma_heap:/dev/dma_heap
+     - /dev/mpp_service:/dev/mpp_service
+     - /dev/rk_cec:/dev/rk_cec  
+    networks:
+      docker:
+    logging:
+      options:
+        max-size: 100M
+
+volumes:
+  uploads:
+  outputs:
+
+networks:
+  docker:
