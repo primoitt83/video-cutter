@@ -29,17 +29,6 @@ app.post('/upload', upload.single('video'), (req, res) => {
   res.json({ filename: req.file.filename, path: `/uploads/${req.file.filename}` });
 });
 
-// Rota para listar vídeos já enviados
-app.get('/list-uploads', (req, res) => {
-  fs.readdir(uploadDir, (err, files) => {
-    if (err) {
-      return res.status(500).json({ error: 'Erro ao listar arquivos' });
-    }
-    const videoFiles = files.filter(file => file.endsWith('.mp4'));
-    res.json({ files: videoFiles });
-  });
-});
-
 // Rota para processar vídeo (corte e/ou recorte)
 app.post('/process-video', (req, res) => {
   const { startTime, endTime, filename, fastCut, x, y, width, height, removeAfterProcessing } = req.body;

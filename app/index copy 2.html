@@ -63,28 +63,14 @@
             font-weight: bold;
             margin-left: 10px;
         }
-        .file-selector {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
     <h1>Editor de Vídeo Online</h1>
-    <div class="file-selector">
-        <button type="button" onclick="showUploadForm()">Fazer Upload</button>
-        <button type="button" onclick="showExistingFiles()">Selecionar Vídeo Existente</button>
-    </div>
-
-    <form id="uploadForm" enctype="multipart/form-data" class="hidden">
+    <form id="uploadForm" enctype="multipart/form-data">
         <input type="file" id="videoInput" name="video" accept="video/*" required />
         <button type="submit">Enviar Vídeo</button>
     </form>
-
-    <div id="existingFiles" class="hidden">
-        <h2>Selecione um vídeo existente:</h2>
-        <select id="fileSelect"></select>
-        <button type="button" onclick="loadSelectedVideo()">Carregar Vídeo</button>
-    </div>
 
     <div id="progressBar"><div></div></div>
 
@@ -160,46 +146,6 @@
         let scale = 1;
         let selectedFunction = '';
         let removeAfterProcessing = false;
-
-        function showUploadForm() {
-            document.getElementById('uploadForm').classList.remove('hidden');
-            document.getElementById('existingFiles').classList.add('hidden');
-        }
-
-        function showExistingFiles() {
-            document.getElementById('uploadForm').classList.add('hidden');
-            document.getElementById('existingFiles').classList.remove('hidden');
-            fetch('/list-uploads')
-                .then(response => response.json())
-                .then(data => {
-                    const fileSelect = document.getElementById('fileSelect');
-                    fileSelect.innerHTML = '';
-                    data.files.forEach(file => {
-                        const option = document.createElement('option');
-                        option.value = file;
-                        option.textContent = file;
-                        fileSelect.appendChild(option);
-                    });
-                });
-        }
-
-        function loadSelectedVideo() {
-            const fileSelect = document.getElementById('fileSelect');
-            uploadedFilename = fileSelect.value;
-
-            const videoPlayer = document.getElementById('videoPlayer');
-            videoPlayer.src = `/uploads/${uploadedFilename}`;
-            videoPlayer.style.display = 'block';
-
-            videoPlayer.onloadedmetadata = () => {
-                videoWidth = videoPlayer.videoWidth;
-                videoHeight = videoPlayer.videoHeight;
-                setupCanvas();
-            };
-
-            // Mostra as opções de função após o carregamento do vídeo
-            document.getElementById('functionSelector').classList.remove('hidden');
-        }
 
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
